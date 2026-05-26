@@ -1,0 +1,139 @@
+//register
+const register = async (req, res) => {
+    try {
+        const { name, email, password, } = req.body;
+
+        const subject = "WELCOME TO EXRESS JS"
+
+        const message = `
+         <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
+          <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+           <h2 style="color: white; text-align: center;">🎉 Welcome to ExpressJs, ${name}!</h2>
+      
+           <p style="font-size: 16px; color: #333;">
+           Hi <b>${name}</b>,<br><br>
+           Thank you for registering with <b>ExpressJs</b>. We’re excited to have you join our community.
+           </p>
+
+           <p style="font-size: 16px; color: #333;">
+           Here are your details:
+           </p>
+
+           <table style="width: 100%; border-collapse: collapse;">
+           <tr>
+           <td style="padding: 8px; border: 1px solid #ddd;"><b>Name</b></td>
+           <td style="padding: 8px; border: 1px solid #ddd;">${name}</td>
+           </tr>
+           <tr>
+           <td style="padding: 8px; border: 1px solid #ddd;"><b>Email</b></td>
+           <td style="padding: 8px; border: 1px solid #ddd;">${email}</td>
+           </tr>
+        
+           </table>
+
+          <p style="font-size: 16px; color: #333; margin-top: 20px;">
+           You can now log in and start using our services. 🚀
+          </p>
+
+          <p style="font-size: 14px; color: #666; margin-top: 30px; text-align: center;">
+           If you did not register, please ignore this email.
+           </p>
+            </div>
+          </div>
+        `;
+
+        const mailoptions = {
+            from:  `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+            to: `<${email}`,
+            subject: subject,
+            html: message
+        };
+
+          const info = await transporter.sendMail(mailoptions);
+
+        let profileImageUrl = null;
+
+        if (req.file) {
+            profileImageUrl = `${req.protocol}://${req.get('host')}/public/${req.file.filename}`;
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).json({ message: 'User already exists' });
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new user
+        const user = new User({ name, email, password: hashedPassword, profile: profileImageUrl });
+        await user.save();
+
+        res.json({ message: 'User registered successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+
+
+// const getCheckout = async (req, res) => {
+//     try{
+//     const session = await stripe.checkout.sessions.retrieve(
+//         'cs_test_a17o83binJJsoA5VRZfYrw5bA1r8T8EnGRFCUveKjh2AN0QYQhOCUF6mrl'
+//     );
+
+//     res.json({ message: "checkout is fethced", data: session });
+// } catch(err){
+//     res.status(500).json({error:err.message})
+// }
+// };
+
+
+// // ✅ Create Subscription
+// const createSubscription = async (req, res) => {
+//   try {
+//     const { email, paymentMethodId, priceId } = req.body;
+
+//     // 1. Customer create karo (ya find karo agar already hai)
+//     const customer = await stripe.customers.create({
+//       email: email,
+//       payment_method: paymentMethodId,
+//       invoice_settings: { default_payment_method: paymentMethodId },
+//     });
+
+
+//     // 2. Subscription create karo
+//     const subscription = await stripe.subscriptions.create({
+//       customer: customer.id,
+//       items: [{ price: priceId }],
+//       expand: ['latest_invoice.payment_intent'],
+//     });
+
+//     res.json({
+//       message: "Subscription created successfully",
+//       subscription: subscription
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+// ✅ Get All Subscriptions (Fetch Details)
+// const getSubscriptions = async (req, res) => {
+//   try {
+//     const subscriptions = await stripe.subscriptions.list({
+//       limit: 10, // 10 subscriptions laaenge
+//     });
+
+//     res.json({
+//       message: "Fetched subscriptions successfully",
+//       subscriptions: subscriptions.data
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+//  };
